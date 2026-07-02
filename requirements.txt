@@ -1,0 +1,12 @@
+# Core tracking
+opencv-python
+numpy
+ultralytics
+
+# Camera
+pyrealsense2   # On Jetson/ARM this usually needs to be built from source or installed via apt (librealsense2); pip wheels are x86_64-only.
+
+# Web UI (server.py)
+fastapi
+uvicorn[standard]
+jinja2

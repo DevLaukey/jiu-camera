@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fighter Tracker</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Fighter Boundary Tracker</h1>
+    <span id="conn" class="bad">connecting…</span>
+  </header>
+
+  <div class="layout">
+    <div class="video-wrap">
+      <img id="stream" src="/video_feed" draggable="false" alt="camera feed">
+      <div id="status" class="status-bar">—</div>
+    </div>
+
+    <div class="panel">
+      <section>
+        <h2>Assign role</h2>
+        <div class="btn-row">
+          <button data-key="1" class="role-btn f1">Fighter 1</button>
+          <button data-key="2" class="role-btn f2">Fighter 2</button>
+          <button data-key="r" class="role-btn ref">Referee</button>
+          <button data-key="esc" class="secondary">Cancel</button>
+        </div>
+        <p class="hint">Click a role, then click that person in the video.</p>
+      </section>
+
+      <section>
+        <h2>Mat boundary</h2>
+        <div class="btn-row">
+          <button data-key="d">Draw</button>
+          <button data-key="f">Finish</button>
+          <button data-key="c" class="secondary">Clear</button>
+          <button data-key="s" class="secondary">Save</button>
+        </div>
+        <p class="hint">Draw: click corners in the video. Edit mode: drag a corner handle to move it.</p>
+      </section>
+
+      <section>
+        <h2>Other</h2>
+        <div class="btn-row">
+          <button data-key="p">Toggle Pose/Bbox</button>
+          <button data-key="x" class="danger">Clear All Roles</button>
+          <button data-key="h" class="secondary">Help Overlay</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Log</h2>
+        <div id="log" class="log"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
