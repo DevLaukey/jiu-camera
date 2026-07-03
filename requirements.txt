@@ -4,7 +4,12 @@ numpy
 ultralytics
 
 # Camera
-pyrealsense2   # On Jetson/ARM this usually needs to be built from source or installed via apt (librealsense2); pip wheels are x86_64-only.
+# pyrealsense2 has prebuilt pip wheels for Windows and Linux x86_64/aarch64 only —
+# there is no macOS wheel at all (Intel dropped official macOS builds), and Jetson's
+# JetPack Python is too old for the wheel's ABI. On both Mac and Jetson, build
+# librealsense + the Python bindings from source instead (see SETUP.md) and skip
+# this line's pip install.
+pyrealsense2 ; platform_system != "Darwin"
 
 # Web UI (server.py)
 fastapi
