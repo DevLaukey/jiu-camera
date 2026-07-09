@@ -9,7 +9,8 @@
 #     and stream it into the container — in the Python env that has
 #     pyrealsense2, run `python camera_bridge.py`, then `docker compose up`.
 #     The container connects to it at host.docker.internal:8765 automatically
-#     (a status frame is shown until the bridge is up).
+#     (a status frame is shown until the bridge is up). One-command version:
+#     `./run-mac.sh path/to/venv` starts bridge + compose together.
 #   - Camera on a different machine: set CAMERA_BRIDGE=<camera-host>:8765.
 
 services:
