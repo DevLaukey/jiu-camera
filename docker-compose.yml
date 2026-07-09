@@ -1,0 +1,24 @@
+# Run the tracker web UI with the RealSense camera passed through from a
+# Linux host:
+#
+#   docker compose up --build
+#   open http://<host>:8000
+#
+# USB passthrough only works on a Linux host (Jetson, x86 Linux box). On
+# Windows/macOS the Docker VM cannot see the camera.
+
+services:
+  tracker:
+    build: .
+    ports:
+      - "8000:8000"
+    # Give the container access to the RealSense camera. /dev/bus/usb plus
+    # the cgroup rules below is enough on most hosts and avoids full
+    # --privileged; if the camera still isn't found, replace all three keys
+    # with `privileged: true` and `volumes: ["/dev:/dev"]`.
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+    device_cgroup_rules:
+      - "c 81:* rmw"   # video4linux devices
+      - "c 189:* rmw"  # USB devices
+    restart: unless-stopped

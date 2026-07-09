@@ -5,7 +5,8 @@
       "Bash(pip download *)",
       "Bash(curl -s https://pypi.org/pypi/pyrealsense2/json)",
       "Bash(python -c ' *)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(docker build *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\hp\\AppData\\Local\\Temp\\claude\\c--Users-hp-Videos-SAM-camera\\3d6f2cfc-44c5-4b2d-982b-80ea1c90d25a\\scratchpad"

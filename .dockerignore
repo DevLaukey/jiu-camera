@@ -1,0 +1,10 @@
+.git
+.history
+.claude
+__pycache__
+*.pyc
+*.pt
+SETUP.md
+Dockerfile
+docker-compose.yml
+.dockerignore

@@ -353,6 +353,36 @@ process is the shutdown path, and it saves the boundary on the way out.)
   instead of the `.pt` — bigger change, only worth it once the basics are
   working smoothly.
 
+## Part 9 — Alternative: running in Docker (Linux hosts)
+
+Instead of Parts 4–6, a Linux host (x86 box, or a Jetson if you accept
+CPU-only inference — see the note below) can run the whole thing in a
+container:
+
+```bash
+docker compose up --build     # then open http://<host>:8000
+```
+
+What the image handles for you:
+
+- `pyrealsense2` installs from its Linux pip wheel (x86_64 and aarch64 both
+  exist), so none of the from-source librealsense build in Part 4 is needed.
+- YOLO weights (`yolov8n.pt` and `yolov8n-pose.pt`) are baked in at build
+  time, so the container starts without network access.
+- Torch is the CPU-only build to keep the image small (~2 GB instead of ~7).
+
+Caveats:
+
+- **Linux hosts only.** On Windows/macOS, Docker runs inside a VM that can't
+  see USB devices, so the camera is unreachable — run natively there instead.
+- **The camera is passed through** via `/dev/bus/usb` plus device cgroup
+  rules in `docker-compose.yml`. If the container can't find the camera,
+  switch to the `privileged: true` fallback noted in that file.
+- **No GPU inference as-is.** On a Jetson, GPU-accelerated containers need
+  NVIDIA's L4T base image and `nvidia-container-runtime` instead of the
+  `python:3.11-slim` base — a separate exercise; the native install
+  (Parts 4–6) is the better-trodden path there.
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
