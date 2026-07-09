@@ -2,15 +2,12 @@
 #
 #   docker compose up --build          # then open http://<host>:8000
 #
-# Live camera requires a Linux x86_64 host: pyrealsense2's pip wheels are
-# Linux x86_64 only, and USB passthrough to a container only works on a Linux
-# host (on Windows/macOS, Docker runs in a VM that can't see the camera).
-# On other platforms (e.g. an Apple Silicon Mac, which builds this image as
-# linux/arm64) the image still builds and the server runs with a placeholder
-# feed instead of the camera — see create_camera() in camera_integration.py.
-#
-# The RealSense camera must be plugged into a USB 3.0 port on the host and
-# passed through — see docker-compose.yml.
+# Camera access depends on the host (see docker-compose.yml):
+#   - Linux x86_64: plug the RealSense into a USB 3.0 port; compose passes it
+#     through and pyrealsense2 talks to it directly.
+#   - Mac/Windows: Docker can't see USB, so run `python camera_bridge.py`
+#     natively (in the Python env that has pyrealsense2) and the container
+#     streams frames from it via host.docker.internal:8765 automatically.
 
 FROM python:3.11-slim
 

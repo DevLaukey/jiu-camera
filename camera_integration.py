@@ -9,6 +9,10 @@ Run this file directly for the standalone depth/measure viewer:
   Controls: Q=quit  S=save  C=colormap  Click=measure
 """
 
+import os
+import socket
+import struct
+import threading
 import time
 
 import cv2
@@ -18,7 +22,8 @@ try:
     import pyrealsense2 as rs
 except ImportError:
     # No wheel on this platform (macOS, Linux aarch64) — see requirements.txt.
-    # create_camera() falls back to NullCamera so the web UI still comes up.
+    # create_camera() falls back to NetworkCamera (frames from camera_bridge.py
+    # on the host) or NullCamera so the web UI still comes up.
     rs = None
 
 DEPTH_UNITS = 0.001  # z16 format: each unit = 1mm = 0.001m
@@ -104,6 +109,15 @@ class RealSenseCamera:
         self.pipeline.stop()
 
 
+def _text_frame(lines, width, height):
+    """A black frame with the given status lines, for the no-camera fallbacks."""
+    frame = np.zeros((height, width, 3), dtype=np.uint8)
+    for i, text in enumerate(lines):
+        cv2.putText(frame, text, (30, height // 2 - 10 + 30 * i),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
+    return frame
+
+
 class NullCamera:
     """Placeholder for platforms without pyrealsense2 (macOS, Linux aarch64):
     serves a static frame so the web UI comes up, with no depth data."""
@@ -112,12 +126,9 @@ class NullCamera:
         self.width = width
         self.height = height
         self._delay = 1.0 / fps
-
-        self._frame = np.zeros((height, width, 3), dtype=np.uint8)
-        for i, text in enumerate(["No RealSense camera",
-                                  "pyrealsense2 unavailable on this platform"]):
-            cv2.putText(self._frame, text, (30, height // 2 - 10 + 30 * i),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
+        self._frame = _text_frame(["No RealSense camera",
+                                   "pyrealsense2 unavailable on this platform"],
+                                  width, height)
 
     def start(self):
         print("[camera] pyrealsense2 not available — serving placeholder frames")
@@ -139,11 +150,115 @@ class NullCamera:
         pass
 
 
+class NetworkCamera:
+    """Receives frames streamed by camera_bridge.py running on another machine
+    (typically the Docker host, where the RealSense is plugged in and
+    pyrealsense2 works natively). Reconnects automatically, and serves a
+    status frame until the bridge is reachable.
+
+    Wire format per frame (see camera_bridge.py): an 8-byte !II header with
+    (jpeg_len, png_len), then a JPEG color image and a 16-bit PNG depth map.
+    """
+
+    def __init__(self, address="host.docker.internal:8765",
+                 width=640, height=480, fps=30, warmup_s=0):
+        host, _, port = address.partition(":")
+        self._addr = (host, int(port) if port else 8765)
+        self.width = width
+        self.height = height
+        self._delay = 1.0 / fps
+
+        self._lock = threading.Lock()
+        self._color = None   # latest decoded BGR frame
+        self._depth = None   # latest decoded uint16 depth array (mm)
+        self._running = True
+        self._placeholder = _text_frame(
+            ["Waiting for camera bridge at",
+             f"{self._addr[0]}:{self._addr[1]}",
+             "Run `python camera_bridge.py` on the camera host"],
+            width, height)
+
+    def start(self):
+        print(f"[camera] Connecting to camera bridge at {self._addr[0]}:{self._addr[1]}")
+        threading.Thread(target=self._recv_loop, daemon=True).start()
+
+    def _recv_loop(self):
+        while self._running:
+            try:
+                with socket.create_connection(self._addr, timeout=5) as sock:
+                    sock.settimeout(10)
+                    print("[camera] Bridge connected")
+                    while self._running:
+                        jpeg_len, png_len = struct.unpack("!II", self._recv_exact(sock, 8))
+                        jpeg = self._recv_exact(sock, jpeg_len)
+                        dpng = self._recv_exact(sock, png_len)
+                        color = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
+                        depth = cv2.imdecode(np.frombuffer(dpng, np.uint8), cv2.IMREAD_UNCHANGED)
+                        with self._lock:
+                            self._color, self._depth = color, depth
+            except OSError:
+                with self._lock:
+                    self._color = self._depth = None
+                time.sleep(2)  # bridge not up (yet) — keep retrying
+
+    @staticmethod
+    def _recv_exact(sock, n):
+        buf = b""
+        while len(buf) < n:
+            chunk = sock.recv(n - len(buf))
+            if not chunk:
+                raise ConnectionError("bridge closed the connection")
+            buf += chunk
+        return buf
+
+    def get_frame(self):
+        time.sleep(self._delay)  # pace the capture loop like a real camera would
+        with self._lock:
+            if self._color is None:
+                return self._placeholder.copy(), None
+            # copy: the tracker annotates the frame in place
+            return self._color.copy(), self._depth
+
+    def get_distance_cm(self, x, y):
+        with self._lock:
+            depth = self._depth
+        if depth is None or not (0 <= x < self.width and 0 <= y < self.height):
+            return None
+        d = float(depth[int(y), int(x)]) * DEPTH_UNITS * 100
+        return d if d > 0 else None
+
+    def colorize_depth(self, depth_frame):
+        with self._lock:
+            depth = self._depth
+        if depth is None:
+            return self._placeholder.copy()
+        # Match the RealSense colorizer's default range (0-4m) roughly.
+        scaled = np.clip(depth / 4000.0 * 255, 0, 255).astype(np.uint8)
+        return cv2.applyColorMap(scaled, cv2.COLORMAP_JET)
+
+    def cycle_color_scheme(self):
+        return "N/A"
+
+    def stop(self):
+        self._running = False
+
+
 def create_camera(**kwargs):
-    """Return a RealSenseCamera, or a NullCamera where pyrealsense2 has no wheel."""
-    if rs is None:
-        return NullCamera(**kwargs)
-    return RealSenseCamera(**kwargs)
+    """Pick the frame source for this environment:
+    - CAMERA_BRIDGE=host[:port] env var  -> NetworkCamera at that address
+    - pyrealsense2 importable            -> RealSenseCamera (local USB camera)
+    - inside Docker without pyrealsense2 -> NetworkCamera at the Docker host
+      (start camera_bridge.py natively on the host to feed it)
+    - otherwise                          -> NullCamera placeholder
+    """
+    bridge = os.environ.get("CAMERA_BRIDGE")
+    if bridge:
+        return NetworkCamera(bridge, **kwargs)
+    if rs is not None:
+        return RealSenseCamera(**kwargs)
+    if os.path.exists("/.dockerenv"):
+        return NetworkCamera(**kwargs)
+    return NullCamera(**kwargs)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

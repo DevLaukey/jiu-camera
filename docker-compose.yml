@@ -1,18 +1,29 @@
-# Run the tracker web UI with the RealSense camera passed through from a
-# Linux host:
+# Run the tracker web UI:
 #
 #   docker compose up --build
 #   open http://<host>:8000
 #
-# USB passthrough only works on a Linux host (Jetson, x86 Linux box). On
-# Windows/macOS the Docker VM cannot see the camera — there the server runs
-# with a placeholder feed instead (see camera_integration.py).
+# Camera access depends on the host:
+#   - Linux x86_64: the RealSense is passed through over USB (config below).
+#   - Mac/Windows: the Docker VM cannot see USB, so run the camera natively
+#     and stream it into the container — in the Python env that has
+#     pyrealsense2, run `python camera_bridge.py`, then `docker compose up`.
+#     The container connects to it at host.docker.internal:8765 automatically
+#     (a status frame is shown until the bridge is up).
+#   - Camera on a different machine: set CAMERA_BRIDGE=<camera-host>:8765.
 
 services:
   tracker:
     build: .
     ports:
       - "8000:8000"
+    environment:
+      # Optional camera_bridge.py address; empty means auto (USB camera if
+      # pyrealsense2 is available, else host.docker.internal:8765).
+      - CAMERA_BRIDGE=${CAMERA_BRIDGE:-}
+    extra_hosts:
+      # Make host.docker.internal resolve on Linux too (no-op on Docker Desktop).
+      - "host.docker.internal:host-gateway"
     # Give the container access to the RealSense camera. /dev/bus/usb plus
     # the cgroup rules below is enough on most hosts and avoids full
     # --privileged; if the camera still isn't found, replace all three keys
