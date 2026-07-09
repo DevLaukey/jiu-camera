@@ -1,10 +1,13 @@
 # Fighter Boundary Tracker — web UI (server.py)
 #
-# Linux-only: pyrealsense2's pip wheels cover linux x86_64/aarch64, and USB
-# passthrough to a container only works on a Linux host (on Windows/macOS,
-# Docker runs in a VM that can't see the camera — run natively there instead).
-#
 #   docker compose up --build          # then open http://<host>:8000
+#
+# Live camera requires a Linux x86_64 host: pyrealsense2's pip wheels are
+# Linux x86_64 only, and USB passthrough to a container only works on a Linux
+# host (on Windows/macOS, Docker runs in a VM that can't see the camera).
+# On other platforms (e.g. an Apple Silicon Mac, which builds this image as
+# linux/arm64) the image still builds and the server runs with a placeholder
+# feed instead of the camera — see create_camera() in camera_integration.py.
 #
 # The RealSense camera must be plugged into a USB 3.0 port on the host and
 # passed through — see docker-compose.yml.

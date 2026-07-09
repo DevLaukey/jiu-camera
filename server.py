@@ -24,7 +24,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
-from camera_integration import RealSenseCamera
+from camera_integration import create_camera
 from tracker import FighterTracker
 
 STREAM_FPS    = 20
@@ -34,7 +34,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-camera  = RealSenseCamera()
+camera  = create_camera()
 tracker = FighterTracker()
 
 # Guards tracker's mutable state, which is written from both the capture

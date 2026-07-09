@@ -13,7 +13,13 @@ import time
 
 import cv2
 import numpy as np
-import pyrealsense2 as rs
+
+try:
+    import pyrealsense2 as rs
+except ImportError:
+    # No wheel on this platform (macOS, Linux aarch64) — see requirements.txt.
+    # create_camera() falls back to NullCamera so the web UI still comes up.
+    rs = None
 
 DEPTH_UNITS = 0.001  # z16 format: each unit = 1mm = 0.001m
 
@@ -22,6 +28,10 @@ class RealSenseCamera:
     """Starts a RealSense pipeline and hands back aligned color/depth frames."""
 
     def __init__(self, width=640, height=480, fps=30, warmup_s=3):
+        if rs is None:
+            raise RuntimeError(
+                "pyrealsense2 is not installed (no wheel for this platform) — "
+                "use create_camera() to fall back to a placeholder feed")
         self.width = width
         self.height = height
 
@@ -92,6 +102,48 @@ class RealSenseCamera:
 
     def stop(self):
         self.pipeline.stop()
+
+
+class NullCamera:
+    """Placeholder for platforms without pyrealsense2 (macOS, Linux aarch64):
+    serves a static frame so the web UI comes up, with no depth data."""
+
+    def __init__(self, width=640, height=480, fps=30, warmup_s=0):
+        self.width = width
+        self.height = height
+        self._delay = 1.0 / fps
+
+        self._frame = np.zeros((height, width, 3), dtype=np.uint8)
+        for i, text in enumerate(["No RealSense camera",
+                                  "pyrealsense2 unavailable on this platform"]):
+            cv2.putText(self._frame, text, (30, height // 2 - 10 + 30 * i),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
+
+    def start(self):
+        print("[camera] pyrealsense2 not available — serving placeholder frames")
+
+    def get_frame(self):
+        time.sleep(self._delay)  # pace the capture loop like a real camera would
+        return self._frame.copy(), None
+
+    def get_distance_cm(self, x, y):
+        return None
+
+    def colorize_depth(self, depth_frame):
+        return self._frame.copy()
+
+    def cycle_color_scheme(self):
+        return "N/A"
+
+    def stop(self):
+        pass
+
+
+def create_camera(**kwargs):
+    """Return a RealSenseCamera, or a NullCamera where pyrealsense2 has no wheel."""
+    if rs is None:
+        return NullCamera(**kwargs)
+    return RealSenseCamera(**kwargs)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

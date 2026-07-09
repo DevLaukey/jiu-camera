@@ -5,7 +5,8 @@
 #   open http://<host>:8000
 #
 # USB passthrough only works on a Linux host (Jetson, x86 Linux box). On
-# Windows/macOS the Docker VM cannot see the camera.
+# Windows/macOS the Docker VM cannot see the camera — there the server runs
+# with a placeholder feed instead (see camera_integration.py).
 
 services:
   tracker:
