@@ -23,9 +23,13 @@ if ! "$VENV/bin/python" -c "import pyrealsense2" 2>/dev/null; then
     exit 1
 fi
 
-"$VENV/bin/python" camera_bridge.py &
+# librealsense on macOS opens the camera via libusb, which needs root —
+# same reason the standalone viewer had to run as `sudo -E python test.py`.
+echo "[run-mac] Camera access needs root on macOS — you may be asked for your password."
+sudo -v
+sudo -E "$VENV/bin/python" camera_bridge.py &
 BRIDGE_PID=$!
-trap 'kill "$BRIDGE_PID" 2>/dev/null; docker compose down' EXIT
+trap 'sudo kill "$BRIDGE_PID" 2>/dev/null; docker compose down' EXIT
 
 echo "[run-mac] Bridge started (pid $BRIDGE_PID); starting web app..."
 docker compose up --build

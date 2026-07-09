@@ -2,6 +2,9 @@
 opencv-python
 numpy
 ultralytics
+# ultralytics' object tracker imports lap lazily and pip-installs it at runtime
+# if missing — pin it here so the Docker image bakes it in instead.
+lap>=0.5.12
 
 # Camera
 # pyrealsense2 has prebuilt pip wheels for Windows and Linux x86_64 only — there is

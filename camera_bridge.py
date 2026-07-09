@@ -23,6 +23,7 @@ decoded by NetworkCamera in camera_integration.py.
 
 import socket
 import struct
+import time
 
 import cv2
 import numpy as np
@@ -49,7 +50,16 @@ def _stream(camera, conn):
 
 def main():
     camera = RealSenseCamera()
-    camera.start()
+    while True:
+        try:
+            camera.start()
+            break
+        except RuntimeError as e:
+            # Typically "No device connected" — camera unplugged, on a
+            # charge-only/USB-2 cable, or grabbed by another process.
+            print(f"[bridge] {e} — waiting for the RealSense (USB 3 port, "
+                  "no other app using it). Retrying in 3s...")
+            time.sleep(3)
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
