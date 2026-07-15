@@ -37,19 +37,25 @@ function appendLog(line) {
   while (logEl.children.length > 200) logEl.removeChild(logEl.firstChild);
 }
 
+const ZONE_NAMES = { fight: 'FIGHT SQUARE', tagA: 'TAG ZONE A', tagB: 'TAG ZONE B' };
+
 function updateStatus(state) {
   const bits = [];
-  if (state.pending_role) {
+  if (state.game_over) {
+    bits.push(`GAME OVER — Team ${state.game_over_team} reached the penalty limit (G to reset)`);
+  } else if (state.pending_role) {
     bits.push(`ASSIGN → click the person to make them ${state.pending_role}`);
-  } else if (state.drawing_mode) {
-    bits.push('DRAWING BOUNDARY — click corners, then Finish');
+  } else if (state.drawing_zone) {
+    bits.push(`DRAWING ${ZONE_NAMES[state.drawing_zone] ?? state.drawing_zone} — click corners, then Finish`);
   } else {
     bits.push('EDIT MODE — drag a corner to move it');
   }
   bits.push(state.use_pose ? 'POSE (ankles)' : 'BBOX (bottom-centre)');
-  const pen = state.penalty_counts || {};
-  bits.push(`Penalties  F1:${pen.F1 ?? 0}  F2:${pen.F2 ?? 0}`);
+  const pen = state.team_penalties || {};
+  const max = state.max_penalties ?? '?';
+  bits.push(`Penalties  A:${pen.A ?? 0}/${max}  B:${pen.B ?? 0}/${max}`);
   statusEl.textContent = bits.join('   |   ');
+  statusEl.classList.toggle('game-over', !!state.game_over);
 }
 
 function sendMsg(obj) {

@@ -1,0 +1,67 @@
+=============================================================================
+ SAM TAG TRACKER — CONTROLS
+=============================================================================
+ The same controls work in both front-ends:
+   * model.py  — local OpenCV window (keyboard + mouse)
+   * server.py — browser UI (buttons mirror every key; keyboard shortcuts
+                 also work while the page has focus)
+
+-----------------------------------------------------------------------------
+ ASSIGN ATHLETES
+-----------------------------------------------------------------------------
+   1        Next click assigns Team A athlete 1  (A1)
+   2        Next click assigns Team A athlete 2  (A2)
+   3        Next click assigns Team B athlete 1  (B1)
+   4        Next click assigns Team B athlete 2  (B2)
+   R        Next click assigns the Referee
+   ESC      Cancel assignment mode
+   X        Clear ALL role assignments (penalties are kept)
+
+   How to assign: press the key (or button), then click on that person's
+   box in the video. If the tracker loses someone, appearance re-ID will
+   try to recover them automatically; re-assign manually if it picks wrong.
+
+-----------------------------------------------------------------------------
+ ZONES  (fight square + tag zones)
+-----------------------------------------------------------------------------
+   D        Start drawing the FIGHT SQUARE   — click each corner in the video
+   T        Start drawing TEAM A's TAG ZONE  — click each corner
+   Y        Start drawing TEAM B's TAG ZONE  — click each corner
+   F        Finish / close the zone being drawn
+   C        Clear ALL zones
+   S        Save zones to saved_points.json (also saved on shutdown)
+
+   Editing: when not drawing, drag any corner handle to move it.
+   IMPORTANT: draw the tag zones touching the fight square. Anywhere
+   outside all three zones counts as the white border — an athlete who
+   stands there gets a breach penalty.
+
+-----------------------------------------------------------------------------
+ GAME / PENALTIES
+-----------------------------------------------------------------------------
+   [        Decrease the penalty limit (game-over threshold)
+   ]        Increase the penalty limit             (default: 6)
+   G        Reset the game — clears penalties, game-over state, rule timers
+
+   Penalties are recorded automatically per TEAM:
+     * Double occupancy — 2 same-team athletes in the fight square > 3 s
+     * Border breach    — standing outside every zone > 0.5 s
+                          (includes breaches while moving between zones)
+     * Quick re-tag     — tagging back in within 5 s of tagging out
+   When a team reaches the penalty limit the screen turns RED (game over)
+   and no further penalties are recorded until you press G.
+
+-----------------------------------------------------------------------------
+ DISPLAY / TRACKING
+-----------------------------------------------------------------------------
+   P        Toggle pose tracking (ankles) vs bbox tracking (bottom-centre)
+   H        Toggle the on-screen help overlay
+   Q        Quit (local OpenCV window only — stop server.py with Ctrl+C)
+
+-----------------------------------------------------------------------------
+ MOUSE (normal mode)
+-----------------------------------------------------------------------------
+   Left-click a person box    Assign the pending role (after 1/2/3/4/R)
+   Left-click + drag corner   Move a zone corner
+   (Browser UI: touch works too — tap to click, drag to move a corner)
+=============================================================================

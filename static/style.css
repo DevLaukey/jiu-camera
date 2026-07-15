@@ -101,9 +101,15 @@ button:active  { background: #383e4c; }
 
 button.secondary { opacity: 0.85; }
 button.danger    { border-color: #6b2a2a; color: #ff9d9d; }
-button.role-btn.f1  { border-color: #c78a00; }
-button.role-btn.f2  { border-color: #0064c7; }
-button.role-btn.ref { border-color: #8a8a8a; }
+button.role-btn.team-a { border-color: #0064c7; }
+button.role-btn.team-b { border-color: #c74800; }
+button.role-btn.ref    { border-color: #8a8a8a; }
+
+.status-bar.game-over {
+  background: #4a1010;
+  color: #ffb4b4;
+  font-weight: 600;
+}
 
 .hint {
   font-size: 12px;

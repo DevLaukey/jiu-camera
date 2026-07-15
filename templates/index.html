@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fighter Tracker</title>
+<title>SAM Tag Tracker</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <header>
-    <h1>Fighter Boundary Tracker</h1>
+    <h1>SAM Tag Tracker</h1>
     <span id="conn" class="bad">connecting…</span>
   </header>
 
@@ -20,10 +20,12 @@
 
     <div class="panel">
       <section>
-        <h2>Assign role</h2>
+        <h2>Assign athlete</h2>
         <div class="btn-row">
-          <button data-key="1" class="role-btn f1">Fighter 1</button>
-          <button data-key="2" class="role-btn f2">Fighter 2</button>
+          <button data-key="1" class="role-btn team-a">A1</button>
+          <button data-key="2" class="role-btn team-a">A2</button>
+          <button data-key="3" class="role-btn team-b">B1</button>
+          <button data-key="4" class="role-btn team-b">B2</button>
           <button data-key="r" class="role-btn ref">Referee</button>
           <button data-key="esc" class="secondary">Cancel</button>
         </div>
@@ -31,14 +33,26 @@
       </section>
 
       <section>
-        <h2>Mat boundary</h2>
+        <h2>Zones</h2>
         <div class="btn-row">
-          <button data-key="d">Draw</button>
+          <button data-key="d">Draw Fight Square</button>
+          <button data-key="t" class="role-btn team-a">Draw Tag Zone A</button>
+          <button data-key="y" class="role-btn team-b">Draw Tag Zone B</button>
           <button data-key="f">Finish</button>
-          <button data-key="c" class="secondary">Clear</button>
+          <button data-key="c" class="secondary">Clear All</button>
           <button data-key="s" class="secondary">Save</button>
         </div>
-        <p class="hint">Draw: click corners in the video. Edit mode: drag a corner handle to move it.</p>
+        <p class="hint">Draw: click corners in the video, then Finish. Anywhere outside all zones counts as the white border. Edit mode: drag a corner handle to move it.</p>
+      </section>
+
+      <section>
+        <h2>Game</h2>
+        <div class="btn-row">
+          <button data-key="[">Penalty Limit −</button>
+          <button data-key="]">Penalty Limit +</button>
+          <button data-key="g" class="danger">Reset Game</button>
+        </div>
+        <p class="hint">The screen turns red when a team reaches the penalty limit.</p>
       </section>
 
       <section>

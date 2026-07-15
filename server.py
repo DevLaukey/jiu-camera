@@ -101,12 +101,16 @@ def index(request: Request):
 
 def _state_snapshot():
     return {
-        "drawing_mode":   tracker.drawing_mode,
+        "drawing_zone":   tracker.drawing_zone,
         "use_pose":       tracker.use_pose,
         "show_help":      tracker.show_help,
         "pending_role":   tracker.pending_role,
-        "penalty_counts": tracker.penalty_counts,
+        "team_penalties": tracker.team_penalties,
+        "max_penalties":  tracker.max_penalties,
+        "game_over":      tracker.game_over,
+        "game_over_team": tracker.game_over_team,
         "role_to_tid":    tracker.role_to_tid,
+        "penalty_events": list(tracker.penalty_events),
     }
 
 
